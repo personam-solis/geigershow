@@ -61,7 +61,9 @@
 
           # Initialize conda
           conda init bash
-          conda create -n default312 python=3.12 jupyter boto3 pyyaml psycopg2 sqlite pip -y
+          conda create -n default312 python=3.12 docker pyyaml psycopg2 sqlite pip -y
+          conda activate default312
+          yes | pip install influxdb-client
           echo "Conda environment 'default312' with Python 3.12 is ready."
         '';
       };
