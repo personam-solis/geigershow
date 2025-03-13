@@ -1,29 +1,95 @@
 import docker
+from os import path, mkdir
+import logging
 
-client = docker.from_env()
+class InfluxContainer:
+    """
+    Create an InfluxDB container that will connect to Grafana.
+    """
 
-# Define the container's name
-container_name = "influxdb"
+    def __init__(self, data_path):
+        """
+        Create the data directory and connect to the Docker daemon
 
-# Define the port mapping
-ports = {'8086/tcp': 8086}
+        Args:
+            data_path (str): Path to the data directory
+        
+        Returns:
+            None
+        """
 
-# Define the volume mapping, using the current working directory
-volumes = {
-    "$PWD/data": {'bind': '/var/lib/influxdb2', 'mode': 'r'},
-    "$PWD/config": {'bind': '/etc/influxdb2', 'mode': 'r'}
-}
+        # Verify path
+        self.data_path = data_path
+        logging.debug(f'Data path: {data_path}')
 
-# Define environment variables
-environment = {
-    "DOCKER_INFLUXDB_INIT_MODE": "setup",
-    "DOCKER_INFLUXDB_INIT_USERNAME": "<USERNAME>",
-    "DOCKER_INFLUXDB_INIT_PASSWORD": "<PASSWORD>",
-    "DOCKER_INFLUXDB_INIT_ORG": "<ORG_NAME>",
-    "DOCKER_INFLUXDB_INIT_BUCKET": "<BUCKET_NAME>"
-}
+        if not path.exists(data_path):
+            # Create path
+            mkdir(data_path)
+            logging.info(f'Created data path: {data_path}')
 
-# Run the container in detached mode
-container = client.containers.run("influxdb:2", detach=True, ports=ports,
-                                  volumes=volumes, environment=environment,
-                                  name=container_name)
+        # Docker Variables
+        # Define the container's name
+        self.container_name = "influxdb"
+        # Define the port mapping
+        self.ports = {'8086/tcp': 8086}
+        # Define the volume mapping, using the current working directory
+        self.volumes = {
+            "$PWD/data": {'bind': '/var/lib/influxdb2', 'mode': 'r'},
+            "$PWD/config": {'bind': '/etc/influxdb2', 'mode': 'r'}
+        }
+        # Define environment variables
+        self.environment = {
+            "DOCKER_INFLUXDB_INIT_MODE": "setup",
+            "DOCKER_INFLUXDB_INIT_USERNAME": "<USERNAME>",
+            "DOCKER_INFLUXDB_INIT_PASSWORD": "<PASSWORD>",
+            "DOCKER_INFLUXDB_INIT_ORG": "<ORG_NAME>",
+            "DOCKER_INFLUXDB_INIT_BUCKET": "<BUCKET_NAME>",
+            "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN": "my-super-secret-auth-token"
+        }
+
+
+        # Connect to Docker daemon
+        self.client = docker.from_env()
+
+
+    def run(self, name):
+        """
+        Run the container
+
+        Args:
+            name (str): Name of the container
+        
+        Returns:
+            None
+        """
+
+        self.name = name
+
+        logging.debug(f'Container name: {self.name}')
+
+        # Run the container in detached mode
+        self.container = self.client.containers.run("influxdb:2", detach=True,
+                                                    ports=self.ports,
+                                                    volumes=self.volumes,
+                                                    environment=self.environment,
+                                                    name=self.container_name)
+        self.container_id = self.container.id
+        logging.debug(f'Container running with ID: {self.container_id}')
+
+    def __repr__(self):
+
+        statement = f"""
+Influx Container Parameters:
+    Data Path: {self.data_path}
+    Container Name: {self.container_name}
+    Ports: {self.ports}
+    Volumes: {self.volumes}
+    Environment Variables: {self.environment}
+"""
+
+        return statement
+
+
+if '__main__' == __name__:
+
+    raise ImportError('THIS SHOULD ONLY BE IMPORTED')
