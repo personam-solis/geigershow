@@ -4,12 +4,13 @@ import logging
 from secrets import token_bytes
 from base64 import b64encode
 
+
 class InfluxContainer:
     """
     Create an InfluxDB container that will connect to Grafana.
     """
 
-    def __init__(self, data_path):
+    def __init__(self, data_path, config_path):
         """
         Create the data directory and connect to the Docker daemon
 
@@ -20,17 +21,23 @@ class InfluxContainer:
             None
         """
 
-        # Verify path
+        # Verify data path exists
         self.data_path = data_path
-        logging.debug(f'Data path: {data_path}')
-
-        if not path.exists(data_path):
+        if not path.exists(self.data_path):
             # Create path
-            mkdir(data_path)
-            logging.info(f'Created data path: {data_path}')
+            mkdir(self.data_path)
+            logging.info(f'Created data path: {self.data_path}')
 
-        # Generate 32 bit password as bytes
+        # Verify config path exists
+        self.config_path = config_path
+        if not path.exists(self.config_path):
+            # Create path
+            mkdir(self.config_path)
+            logging.info(f'Created data path: {self.config_path}')
+
+        # Generate 256 bit (32 bytes) password and secret token as a byte string
         self.password = token_bytes(32)
+        self.token = token_bytes(32)
 
         # Define the container's name
         self.container_name = "influxdb"
@@ -38,7 +45,7 @@ class InfluxContainer:
         self.ports = {'8086/tcp': 8086}
         # Define the volume mapping, using the current working directory
         self.volumes = {
-            "$PWD/data": {'bind': '/var/lib/influxdb2', 'mode': 'r'},
+            self.data_path: {'bind': '/var/lib/influxdb2', 'mode': 'r'},
             "$PWD/config": {'bind': '/etc/influxdb2', 'mode': 'r'}
         }
         # Define environment variables
@@ -47,7 +54,8 @@ class InfluxContainer:
             "DOCKER_INFLUXDB_INIT_USERNAME": "gadmin",
             "DOCKER_INFLUXDB_INIT_PASSWORD": b64encode(self.password).decode('utf-8'),
             "DOCKER_INFLUXDB_INIT_ORG": "ag_house",
-            "DOCKER_INFLUXDB_INIT_BUCKET": "geigercounter"
+            "DOCKER_INFLUXDB_INIT_BUCKET": "geigercounter",
+            "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN": b64encode(self.token).decode('utf-8')
         }
 
 
@@ -85,6 +93,7 @@ class InfluxContainer:
         statement = f"""
 Influx Container Parameters:
     Data Path: {self.data_path}
+    Config Path: {self.config_path}
     Container Name: {self.container_name}
     Ports: {self.ports}
     Volumes: {self.volumes}
