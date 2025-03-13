@@ -45,8 +45,8 @@ class InfluxContainer:
         self.ports = {'8086/tcp': 8086}
         # Define the volume mapping, using the current working directory
         self.volumes = {
-            self.data_path: {'bind': '/var/lib/influxdb2', 'mode': 'r'},
-            self.config_path: {'bind': '/etc/influxdb2', 'mode': 'r'}
+            self.data_path: {'bind': '/var/lib/influxdb2', 'mode': 'rw'},
+            self.config_path: {'bind': '/etc/influxdb2', 'mode': 'rw'}
         }
         # Define environment variables
         self.environment = {
