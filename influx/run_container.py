@@ -46,7 +46,7 @@ class InfluxContainer:
         # Define the volume mapping, using the current working directory
         self.volumes = {
             self.data_path: {'bind': '/var/lib/influxdb2', 'mode': 'r'},
-            "$PWD/config": {'bind': '/etc/influxdb2', 'mode': 'r'}
+            self.config_path: {'bind': '/etc/influxdb2', 'mode': 'r'}
         }
         # Define environment variables
         self.environment = {
