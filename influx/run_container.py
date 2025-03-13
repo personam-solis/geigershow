@@ -1,6 +1,8 @@
 import docker
 from os import path, mkdir
 import logging
+from secrets import token_bytes
+from base64 import b64encode
 
 class InfluxContainer:
     """
@@ -27,7 +29,9 @@ class InfluxContainer:
             mkdir(data_path)
             logging.info(f'Created data path: {data_path}')
 
-        # Docker Variables
+        # Generate 32 bit password as bytes
+        self.password = token_bytes(32)
+
         # Define the container's name
         self.container_name = "influxdb"
         # Define the port mapping
@@ -40,11 +44,10 @@ class InfluxContainer:
         # Define environment variables
         self.environment = {
             "DOCKER_INFLUXDB_INIT_MODE": "setup",
-            "DOCKER_INFLUXDB_INIT_USERNAME": "<USERNAME>",
-            "DOCKER_INFLUXDB_INIT_PASSWORD": "<PASSWORD>",
-            "DOCKER_INFLUXDB_INIT_ORG": "<ORG_NAME>",
-            "DOCKER_INFLUXDB_INIT_BUCKET": "<BUCKET_NAME>",
-            "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN": "my-super-secret-auth-token"
+            "DOCKER_INFLUXDB_INIT_USERNAME": "gadmin",
+            "DOCKER_INFLUXDB_INIT_PASSWORD": b64encode(self.password).decode('utf-8'),
+            "DOCKER_INFLUXDB_INIT_ORG": "ag_house",
+            "DOCKER_INFLUXDB_INIT_BUCKET": "geigercounter"
         }
 
 
