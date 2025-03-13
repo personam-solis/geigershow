@@ -71,7 +71,8 @@ class InfluxContainer:
         logging.debug(f'Container name: {self.name}')
 
         # Run the container in detached mode
-        self.container = self.client.containers.run("influxdb:2", detach=True,
+        self.container = self.client.containers.run(image="influxdb:2",
+                                                    detach=True,
                                                     ports=self.ports,
                                                     volumes=self.volumes,
                                                     environment=self.environment,
